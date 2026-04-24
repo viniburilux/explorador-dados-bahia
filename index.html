@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Explore dados públicos de contratações artísticas pelas prefeituras da Bahia. Dados do Portal Nacional de Contratações Públicas (PNCP).">
+<title>Explorador de Gastos Artísticos Públicos — Bahia</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=IBM+Plex+Mono:wght@400;500;600&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #080B10;
+  --surface: #0E1420;
+  --surface2: #141C2A;
+  --border: #1E2D45;
+  --border2: #2A3F5E;
+  --gold: #D4A843;
+  --gold2: #F0C060;
+  --cyan: #3DC8D8;
+  --text: #D8E4F0;
+  --muted: #6B8099;
+  --muted2: #9AB0C8;
+  --red: #E85050;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Lato', sans-serif;
+  font-weight: 300;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ── NOISE OVERLAY ── */
+body::before {
+  content:'';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── LAYOUT ── */
+.container { max-width: 1000px; margin: 0 auto; padding: 0 20px; position: relative; z-index: 1; }
+
+/* ── MASTHEAD ── */
+.masthead {
+  border-bottom: 1px solid var(--border);
+  padding: 20px 0;
+}
+.masthead-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.masthead-brand {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: var(--gold);
+  text-transform: uppercase;
+}
+.masthead-source {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 1px;
+}
+
+/* ── HERO ── */
+.hero {
+  padding: 60px 0 40px;
+  border-bottom: 1px solid var(--border);
+}
+.hero-eyebrow {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+.hero h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(32px, 5vw, 58px);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -1px;
+  margin-bottom: 20px;
+  color: #EFF5FF;
+}
+.hero h1 em {
+  font-style: italic;
+  color: var(--gold2);
+}
+.hero-desc {
+  font-size: 16px;
+  color: var(--muted2);
+  max-width: 620px;
+  line-height: 1.7;
+  margin-bottom: 36px;
+}
+.hero-desc a { color: var(--cyan); text-decoration: none; }
+.hero-desc a:hover { text-decoration: underline; }
+
+/* Stats bar */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.stat-box {
+  background: var(--surface);
+  padding: 18px 20px;
+  transition: background 0.2s;
+}
+.stat-box:hover { background: var(--surface2); }
+.stat-box .n {
+  font-family: 'Playfair Display', serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--gold2);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.stat-box .l {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* ── EXPLORER ── */
+.explorer {
+  padding: 48px 0;
+}
+.section-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.section-header h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: #EFF5FF;
+}
+.section-header .divider {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* Perguntas prontas */
+.questions-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.questions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px;
+  margin-bottom: 32px;
+}
+.q-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 14px 18px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--text);
+  font-family: 'Lato', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.4;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.q-btn .q-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.q-btn:hover {
+  background: var(--surface2);
+  border-color: var(--gold);
+  color: var(--gold2);
+}
+.q-btn.active {
+  border-color: var(--gold);
+  background: rgba(212,168,67,0.08);
+  color: var(--gold2);
+}
+
+/* Visualization panel */
+#viz-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  display: none;
+  margin-bottom: 32px;
+}
+.viz-header {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.viz-header h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #EFF5FF;
+  line-height: 1.2;
+}
+.viz-close {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 20px;
+  flex-shrink: 0;
+  padding: 0 4px;
+  transition: color 0.15s;
+}
+.viz-close:hover { color: var(--text); }
+.viz-body { padding: 24px; }
+.viz-insight {
+  background: rgba(212,168,67,0.06);
+  border-left: 3px solid var(--gold);
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: var(--muted2);
+  line-height: 1.6;
+  border-radius: 0 4px 4px 0;
+}
+.viz-insight strong { color: var(--gold2); font-weight: 700; }
+#viz-chart-container { position: relative; height: 360px; }
+
+/* Ranking list */
+.ranking-list { display: flex; flex-direction: column; gap: 8px; }
+.ranking-item {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(30,45,69,0.5);
+}
+.ranking-item:last-child { border-bottom: none; }
+.rank-n {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--muted);
+  text-align: right;
+}
+.rank-n.top3 { color: var(--gold); font-weight: 600; }
+.rank-name { font-size: 14px; font-weight: 700; color: var(--text); }
+.rank-sub { font-size: 11px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; margin-top: 2px; }
+.rank-val {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 13px;
+  color: var(--gold2);
+  font-weight: 600;
+  text-align: right;
+  white-space: nowrap;
+}
+.bar-wrap {
+  grid-column: 2 / -1;
+  height: 2px;
+  background: var(--border);
+  border-radius: 1px;
+  margin-top: 4px;
+}
+.bar-fill {
+  height: 100%;
+  background: var(--gold);
+  border-radius: 1px;
+  opacity: 0.6;
+}
+
+/* Cache items */
+.cache-grid { display: flex; flex-direction: column; gap: 10px; }
+.cache-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 16px;
+  background: var(--surface2);
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+.cache-rank {
+  font-family: 'Playfair Display', serif;
+  font-size: 24px;
+  font-weight: 900;
+  color: var(--border2);
+  min-width: 32px;
+  text-align: center;
+}
+.cache-info { flex: 1; }
+.cache-artista { font-size: 15px; font-weight: 700; color: var(--text); }
+.cache-municipio { font-size: 11px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; margin-top: 2px; }
+.cache-valor {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--gold2);
+}
+
+/* ── CHAT ── */
+.chat-section { padding: 0 0 48px; }
+
+.chat-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.chat-examples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.chat-eg {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.chat-eg:hover {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  background: rgba(61,200,216,0.05);
+}
+.chat-input-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.chat-input {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 14px 18px;
+  color: var(--text);
+  font-family: 'Lato', sans-serif;
+  font-size: 15px;
+  font-weight: 300;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.chat-input:focus { border-color: var(--gold); }
+.chat-input::placeholder { color: var(--muted); }
+.chat-send {
+  background: var(--gold);
+  color: #080B10;
+  border: none;
+  border-radius: 6px;
+  padding: 14px 24px;
+  font-family: 'Lato', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  white-space: nowrap;
+}
+.chat-send:hover { opacity: 0.85; }
+.chat-send:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Mensagens */
+.chat-messages { display: flex; flex-direction: column; gap: 16px; }
+.msg-user {
+  background: rgba(212,168,67,0.06);
+  border: 1px solid rgba(212,168,67,0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  font-size: 14px;
+  color: var(--gold2);
+  font-family: 'IBM Plex Mono', monospace;
+  align-self: flex-end;
+  max-width: 80%;
+}
+.msg-ai {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 18px 22px;
+  font-size: 15px;
+  color: var(--text);
+  line-height: 1.7;
+}
+.msg-ai strong { color: var(--gold2); font-weight: 700; }
+.msg-ai .ai-tag {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  display: block;
+}
+.msg-loading {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--muted);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+}
+.dots { display:flex; gap:4px; }
+.dots span {
+  width:6px; height:6px;
+  background: var(--gold);
+  border-radius: 50%;
+  animation: blink 1.4s infinite;
+}
+.dots span:nth-child(2){ animation-delay:.2s; }
+.dots span:nth-child(3){ animation-delay:.4s; }
+@keyframes blink { 0%,80%,100%{opacity:.2} 40%{opacity:1} }
+
+/* ── DATASET ── */
+.dataset-section {
+  border-top: 1px solid var(--border);
+  padding: 40px 0;
+}
+.dataset-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 20px;
+}
+@media(max-width:560px){ .dataset-grid { grid-template-columns: 1fr; } }
+.dataset-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 20px;
+}
+.dataset-card h4 {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.dataset-card p { font-size: 13px; color: var(--muted2); line-height: 1.6; }
+.download-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  background: transparent;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  padding: 10px 20px;
+  border-radius: 4px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.15s;
+  letter-spacing: 1px;
+}
+.download-btn:hover {
+  background: rgba(212,168,67,0.1);
+}
+
+/* ── FOOTER ── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 24px 0;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 1px;
+}
+.footer-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+footer a { color: var(--gold); text-decoration: none; }
+
+/* Responsive */
+@media(max-width: 640px) {
+  .hero h1 { font-size: 32px; }
+  .questions-grid { grid-template-columns: 1fr; }
+  .masthead-source { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="container">
+    <div class="masthead-inner">
+      <div class="masthead-brand">LuxVerso Research</div>
+      <div class="masthead-source">Fonte: PNCP · Dados abertos do governo federal</div>
+    </div>
+  </div>
+</div>
+
+<div class="hero">
+  <div class="container">
+    <div class="hero-eyebrow">Explorador de dados públicos</div>
+    <h1>Como as prefeituras da Bahia<br>gastam com <em>artistas e shows?</em></h1>
+    <p class="hero-desc">
+      Dados reais do <a href="https://pncp.gov.br" target="_blank">Portal Nacional de Contratações Públicas (PNCP)</a> — 
+      coletados, limpos e classificados automaticamente. Todos os contratos são públicos e verificáveis.
+      Explore, pergunte e descubra.
+    </p>
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="n">R$ 629M</div>
+        <div class="l">shows em 2025</div>
+      </div>
+      <div class="stat-box">
+        <div class="n">R$ 160M</div>
+        <div class="l">shows jan–abr/26</div>
+      </div>
+      <div class="stat-box">
+        <div class="n">28.306</div>
+        <div class="l">contratos analisados</div>
+      </div>
+      <div class="stat-box">
+        <div class="n">273</div>
+        <div class="l">municípios</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="explorer">
+  <div class="container">
+    <div class="section-header">
+      <h2>Explorar por pergunta</h2>
+      <div class="divider"></div>
+    </div>
+
+    <div class="questions-label">Clique em uma pergunta para ver a resposta nos dados</div>
+    <div class="questions-grid">
+      <button class="q-btn" onclick="mostrar('ranking2025')">
+        <span class="q-icon">🏆</span>
+        <span>Quais municípios mais gastaram em shows em 2025?</span>
+      </button>
+      <button class="q-btn" onclick="mostrar('ranking2026')">
+        <span class="q-icon">📊</span>
+        <span>Quais municípios mais gastaram em 2026 (até abril)?</span>
+      </button>
+      <button class="q-btn" onclick="mostrar('caches')">
+        <span class="q-icon">💰</span>
+        <span>Quais foram os maiores cachês individuais?</span>
+      </button>
+      <button class="q-btn" onclick="mostrar('artistas')">
+        <span class="q-icon">🎤</span>
+        <span>Quais artistas aparecem em mais municípios?</span>
+      </button>
+      <button class="q-btn" onclick="mostrar('evolucao')">
+        <span class="q-icon">📈</span>
+        <span>Como os gastos evoluíram mês a mês em 2025?</span>
+      </button>
+      <button class="q-btn" onclick="mostrar('comparacao')">
+        <span class="q-icon">⚖️</span>
+        <span>Como 2025 se compara com 2026?</span>
+      </button>
+    </div>
+
+    <div id="viz-panel">
+      <div class="viz-header">
+        <h3 id="viz-title">—</h3>
+        <button class="viz-close" onclick="fecharViz()">✕</button>
+      </div>
+      <div class="viz-body">
+        <div class="viz-insight" id="viz-insight"></div>
+        <div id="viz-content"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="chat-section">
+  <div class="container">
+    <div class="section-header">
+      <h2>Pergunte aos dados</h2>
+      <div class="divider"></div>
+    </div>
+
+    <div class="chat-label">Exemplos de perguntas</div>
+    <div class="chat-examples">
+      <button class="chat-eg" onclick="preencherChat('Quanto Feira de Santana gastou em shows em 2025?')">Quanto Feira de Santana gastou?</button>
+      <button class="chat-eg" onclick="preencherChat('Quais artistas tocaram em mais de 10 cidades diferentes?')">Artistas em 10+ cidades</button>
+      <button class="chat-eg" onclick="preencherChat('Compare os gastos com São João e com Carnaval')">São João vs Carnaval</button>
+      <button class="chat-eg" onclick="preencherChat('Qual município mais cresceu os gastos de 2025 para 2026?')">Maior crescimento 25→26</button>
+      <button class="chat-eg" onclick="preencherChat('Qual foi o contrato mais caro de todo o dataset?')">Maior contrato</button>
+      <button class="chat-eg" onclick="preencherChat('Quantos municípios gastaram mais de 5 milhões em shows?')">Municípios acima de R$5M</button>
+    </div>
+
+    <div class="chat-input-row">
+      <input
+        class="chat-input"
+        id="chatInput"
+        type="text"
+        placeholder="Qual foi o cachê mais caro? Quanto Paulo Afonso gastou? Quais cidades do interior aparecem mais?"
+        onkeydown="if(event.key==='Enter') enviarChat()"
+      />
+      <button class="chat-send" id="sendBtn" onclick="enviarChat()">Perguntar →</button>
+    </div>
+
+    <div class="chat-messages" id="chatMessages"></div>
+  </div>
+</div>
+
+<div class="dataset-section">
+  <div class="container">
+    <div class="section-header">
+      <h2>Metodologia e dados</h2>
+      <div class="divider"></div>
+    </div>
+    <div class="dataset-grid">
+      <div class="dataset-card">
+        <h4>Como os dados foram coletados</h4>
+        <p>Pipeline automatizado que consulta a API pública do PNCP. Filtra contratos por modalidade <strong>Inexigibilidade (cód. 9)</strong> — a forma legal de contratar artistas sem licitação. Dados coletados mês a mês para evitar timeouts.</p>
+      </div>
+      <div class="dataset-card">
+        <h4>Como os dados foram classificados</h4>
+        <p>Cada contrato recebe uma categoria automática baseada no campo <strong>objetoCompra</strong>: artístico, saúde, consultoria, locação, manutenção. Contratos de órgãos estaduais/federais e outliers de valor são marcados com flags — sem excluir dados.</p>
+      </div>
+      <div class="dataset-card">
+        <h4>Cobertura</h4>
+        <p><strong>2025:</strong> janeiro a dezembro — 21.797 contratos, 273 municípios.<br>
+        <strong>2026:</strong> janeiro a abril — 6.509 contratos, 157 municípios.<br>
+        Total: 28.306 contratos de inexigibilidade analisados.</p>
+      </div>
+      <div class="dataset-card">
+        <h4>Transparência e verificação</h4>
+        <p>Todo contrato tem um <strong>número de controle PNCP</strong> verificável em <a href="https://pncp.gov.br" target="_blank" style="color:var(--gold)">pncp.gov.br</a>. Os dados são públicos e de acesso livre. Este projeto não faz acusações — apenas organiza o que já é público.</p>
+      </div>
+    </div>
+    <a href="https://viniburilux.github.io/monitor-gastos-pncp" class="download-btn" target="_blank">
+      ↗ Ver página principal do projeto
+    </a>
+  </div>
+</div>
+
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <span>LuxVerso Research · Vinícius Buri Lux · Salvador, BA</span>
+      <span>Fonte: <a href="https://pncp.gov.br" target="_blank">PNCP</a> · Modalidade: Inexigibilidade · Bahia 2025–2026</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ── DADOS EMBUTIDOS ──────────────────────────────────────────────────────────
+const DATA = {
+  ranking2025: [
+    {nome:"Paulo Afonso", val:14820000, n:68},
+    {nome:"Feira de Santana", val:14600000, n:191},
+    {nome:"Porto Seguro", val:12120000, n:270},
+    {nome:"Conceição do Jacuípe", val:12060000, n:57},
+    {nome:"Itaparica", val:10890000, n:49},
+    {nome:"Irecê", val:10810000, n:45},
+    {nome:"Jequié", val:10470000, n:58},
+    {nome:"Mata de São João", val:9830000, n:190},
+    {nome:"Cruz das Almas", val:9670000, n:32},
+    {nome:"Quijingue", val:9480000, n:56},
+    {nome:"Candeias", val:8420000, n:54},
+    {nome:"Barreiras", val:8270000, n:42},
+    {nome:"Santo Antônio de Jesus", val:8180000, n:28},
+    {nome:"Santo Amaro", val:7670000, n:76},
+    {nome:"Entre Rios", val:7540000, n:51},
+  ],
+  ranking2026: [
+    {nome:"Ilhéus", val:6220000, n:31},
+    {nome:"Porto Seguro", val:6150000, n:94},
+    {nome:"Paramirim", val:5980000, n:92},
+    {nome:"Correntina", val:5920000, n:20},
+    {nome:"Santo Amaro", val:5760000, n:38},
+    {nome:"João Dourado", val:5650000, n:35},
+    {nome:"Itaparica", val:5210000, n:32},
+    {nome:"Mata de São João", val:4560000, n:18},
+    {nome:"Nordestina", val:4050000, n:19},
+    {nome:"Queimadas", val:3900000, n:24},
+    {nome:"Salvador", val:2930000, n:18},
+    {nome:"Muritiba", val:2810000, n:17},
+    {nome:"Juazeiro", val:2780000, n:27},
+    {nome:"Guanambi", val:2600000, n:21},
+    {nome:"Cachoeira", val:2580000, n:37},
+  ],
+  caches: [
+    {artista:"Simone Mendes", municipio:"Correntina", val:904000, evento:"Carnaval 2026"},
+    {artista:"Ana Castela", municipio:"Irecê", val:900000, evento:"São João 2025"},
+    {artista:"Ana Castela", municipio:"Vitória da Conquista", val:900000, evento:"São João 2025"},
+    {artista:"Pablo", municipio:"Porto Seguro", val:750000, evento:"Carnaval 2025"},
+    {artista:"Natanzinho Lima", municipio:"Vera Cruz", val:750000, evento:"São João 2025"},
+    {artista:"Xand Avião", municipio:"Malhada", val:704000, evento:"Festejos 2025"},
+    {artista:"Pablo", municipio:"Queimadas", val:704000, evento:"Lavagem 2025"},
+    {artista:"Xanddy Harmonia", municipio:"Correntina", val:700000, evento:"Carnaval 2026"},
+    {artista:"Calcinha Preta", municipio:"Iraquara", val:646000, evento:"São João 2025"},
+    {artista:"João Gomes", municipio:"Vitória da Conquista", val:650000, evento:"São João 2025"},
+  ],
+  artistas: [
+    {nome:"Toque Dez", municipios:45, val:13150300},
+    {nome:"Tayrone", municipios:33, val:9912000},
+    {nome:"Natanzinho Lima", municipios:22, val:13830000},
+    {nome:"Filhos de Jorge", municipios:23, val:2980000},
+    {nome:"Netto Brito", municipios:19, val:3870000},
+    {nome:"Calcinha Preta", municipios:18, val:8115000},
+    {nome:"Xanddy Harmonia", municipios:18, val:9380000},
+    {nome:"Devinho", municipios:15, val:3670000},
+    {nome:"Iguinho e Lulinha", municipios:11, val:4350000},
+    {nome:"Nadson", municipios:10, val:2742600},
+    {nome:"Pablo", municipios:12, val:6208000},
+    {nome:"Belo", municipios:12, val:3767000},
+  ],
+  evolucao: [
+    {mes:"Jan/25", val:430000000, n:1722},
+    {mes:"Fev/25", val:520000000, n:2554},
+    {mes:"Mar/25", val:440000000, n:1732},
+    {mes:"Abr/25", val:460000000, n:1834},
+    {mes:"Mai/25", val:510000000, n:2016},
+    {mes:"Jun/25", val:680000000, n:2147},
+    {mes:"Jul/25", val:590000000, n:2228},
+    {mes:"Ago/25", val:520000000, n:2042},
+    {mes:"Set/25", val:380000000, n:1497},
+    {mes:"Out/25", val:350000000, n:1398},
+    {mes:"Nov/25", val:300000000, n:1175},
+    {mes:"Dez/25", val:370000000, n:1452},
+  ],
+  comparacao: {
+    anos: ['2025 (ano completo)', '2026 (jan–abr)'],
+    contratos: [21797, 6509],
+    artistico: [5937, 2413],
+    valor_total: [629, 160],
+    municipios: [273, 157],
+  }
+};
+
+// ── VISUALIZAÇÕES ────────────────────────────────────────────────────────────
+let chartInstance = null;
+
+const vizsConfig = {
+  ranking2025: {
+    title: "Municípios que mais gastaram em shows — 2025",
+    insight: `<strong>Paulo Afonso lidera</strong> com R$ 14,8M em 68 contratos. Em segundo, Feira de Santana com R$ 14,6M e 191 contratos — quase 4 shows por semana. No top 15, cidades do recôncavo e sertão aparecem consistentemente ao lado do litoral.`,
+    tipo: 'ranking',
+    dados: () => DATA.ranking2025,
+  },
+  ranking2026: {
+    title: "Municípios que mais gastaram em shows — 2026 (jan–abr)",
+    insight: `<strong>Ilhéus e Porto Seguro</strong> lideram 2026 com R$ 6,2M e R$ 6,1M respectivamente, em apenas 4 meses. Se o ritmo continuar, 2026 pode superar 2025. <strong>Correntina</strong> aparece em 4º lugar com só 20 contratos — mas com cachês altíssimos (Carnaval com Simone Mendes, Zé Neto e Cristiano).`,
+    tipo: 'ranking',
+    dados: () => DATA.ranking2026,
+  },
+  caches: {
+    title: "Maiores cachês individuais identificados",
+    insight: `<strong>Simone Mendes</strong> lidera com R$ 904 mil para o Carnaval de Correntina 2026. <strong>Ana Castela</strong> aparece duas vezes — R$ 900 mil em Irecê e mais R$ 900 mil em Vitória da Conquista, ambos para o São João 2025. Total só nesses 10 contratos: <strong>R$ 7,9 milhões de dinheiro público</strong>.`,
+    tipo: 'caches',
+    dados: () => DATA.caches,
+  },
+  artistas: {
+    title: "Artistas presentes em mais municípios",
+    insight: `<strong>Toque Dez</strong> aparece em incríveis 45 municípios diferentes da Bahia em 2025 — praticamente tocou em 1 de cada 6 cidades do estado. <strong>Tayrone</strong> em 33. <strong>Filhos de Jorge</strong> em 23, concentrados no Recôncavo Baiano. Este é o "circuito econômico" das festas municipais.`,
+    tipo: 'artistas_chart',
+    dados: () => DATA.artistas,
+  },
+  evolucao: {
+    title: "Evolução mensal de contratações artísticas — 2025",
+    insight: `O pico ocorre em <strong>junho (São João)</strong> e julho — confirmando que a maior parte das festas se concentra no meio do ano. Mas contratos de shows existem em <strong>todos os meses</strong>: janeiro e fevereiro são movidos pelo Carnaval, dezembro pelo Réveillon.`,
+    tipo: 'line',
+    dados: () => DATA.evolucao,
+  },
+  comparacao: {
+    title: "2025 vs 2026 — comparação",
+    insight: `Em <strong>apenas 4 meses de 2026</strong>, as prefeituras baianas já gastaram R$ 160M em shows — o equivalente a 25% do total de 2025. Se o ritmo continuar, 2026 pode encerrar com gastos próximos ou superiores a 2025. O São João (maio–junho) ainda não entrou nos dados de 2026.`,
+    tipo: 'comparacao',
+    dados: () => DATA.comparacao,
+  },
+};
+
+function mostrar(tipo) {
+  document.querySelectorAll('.q-btn').forEach(b => b.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+
+  const cfg = vizsConfig[tipo];
+  document.getElementById('viz-title').textContent = cfg.title;
+  document.getElementById('viz-insight').innerHTML = cfg.insight;
+
+  const panel = document.getElementById('viz-panel');
+  panel.style.display = 'block';
+
+  const container = document.getElementById('viz-content');
+  container.innerHTML = '';
+
+  if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+
+  if (cfg.tipo === 'ranking') renderRanking(container, cfg.dados());
+  else if (cfg.tipo === 'caches') renderCaches(container, cfg.dados());
+  else if (cfg.tipo === 'artistas_chart') renderArtistas(container, cfg.dados());
+  else if (cfg.tipo === 'line') renderLine(container, cfg.dados());
+  else if (cfg.tipo === 'comparacao') renderComparacao(container, cfg.dados());
+
+  panel.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function fecharViz() {
+  document.getElementById('viz-panel').style.display = 'none';
+  document.querySelectorAll('.q-btn').forEach(b => b.classList.remove('active'));
+  if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+}
+
+function renderRanking(container, dados) {
+  const max = dados[0].val;
+  const html = dados.slice(0,10).map((d,i) => `
+    <div class="ranking-item">
+      <div class="rank-n ${i<3?'top3':''}">${i+1}</div>
+      <div>
+        <div class="rank-name">${d.nome}</div>
+        <div class="rank-sub">${d.n} contratos</div>
+        <div class="bar-wrap"><div class="bar-fill" style="width:${(d.val/max*100).toFixed(0)}%"></div></div>
+      </div>
+      <div class="rank-val">R$ ${(d.val/1e6).toFixed(1)}M</div>
+    </div>
+  `).join('');
+  container.innerHTML = `<div class="ranking-list">${html}</div>`;
+}
+
+function renderCaches(container, dados) {
+  const html = dados.map((d,i) => `
+    <div class="cache-item">
+      <div class="cache-rank">${i+1}</div>
+      <div class="cache-info">
+        <div class="cache-artista">${d.artista}</div>
+        <div class="cache-municipio">${d.municipio} · ${d.evento}</div>
+      </div>
+      <div class="cache-valor">R$ ${(d.val/1e3).toFixed(0)}k</div>
+    </div>
+  `).join('');
+  container.innerHTML = `<div class="cache-grid">${html}</div>`;
+}
+
+function renderArtistas(container, dados) {
+  const canvas = document.createElement('canvas');
+  canvas.style.height = '320px';
+  container.appendChild(canvas);
+  const sorted = [...dados].sort((a,b) => b.municipios - a.municipios).slice(0,10);
+  chartInstance = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: sorted.map(d => d.nome),
+      datasets: [{
+        label: 'Nº de municípios',
+        data: sorted.map(d => d.municipios),
+        backgroundColor: sorted.map((_,i) => i===0 ? 'rgba(212,168,67,0.85)' : 'rgba(212,168,67,0.35)'),
+        borderColor: 'rgba(212,168,67,0.6)',
+        borderWidth: 1,
+        borderRadius: 3,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: {display:false},
+        tooltip: {
+          callbacks: {
+            afterLabel: (ctx) => {
+              const d = sorted[ctx.dataIndex];
+              return `Valor total: R$ ${(d.val/1e6).toFixed(1)}M`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { ticks: {color:'#6B8099', font:{family:'IBM Plex Mono', size:10}}, grid:{color:'rgba(30,45,69,0.5)'} },
+        y: { ticks: {color:'#6B8099', font:{family:'IBM Plex Mono', size:10}}, grid:{color:'rgba(30,45,69,0.5)'}, title:{display:true, text:'Municípios', color:'#6B8099', font:{family:'IBM Plex Mono', size:9}} }
+      }
+    }
+  });
+}
+
+function renderLine(container, dados) {
+  const canvas = document.createElement('canvas');
+  canvas.style.height = '300px';
+  container.appendChild(canvas);
+  chartInstance = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: dados.map(d => d.mes),
+      datasets: [{
+        label: 'Contratos',
+        data: dados.map(d => d.n),
+        backgroundColor: dados.map(d => d.mes.startsWith('Jun') || d.mes.startsWith('Jul') ? 'rgba(212,168,67,0.85)' : 'rgba(212,168,67,0.3)'),
+        borderColor: 'rgba(212,168,67,0.6)',
+        borderWidth: 1,
+        borderRadius: 3,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: {display:false},
+        annotation: {},
+      },
+      scales: {
+        x: { ticks: {color:'#6B8099', font:{family:'IBM Plex Mono', size:10}}, grid:{color:'rgba(30,45,69,0.5)'} },
+        y: { ticks: {color:'#6B8099', font:{family:'IBM Plex Mono', size:10}}, grid:{color:'rgba(30,45,69,0.5)'}, title:{display:true, text:'Contratos', color:'#6B8099', font:{family:'IBM Plex Mono', size:9}} }
+      }
+    }
+  });
+}
+
+function renderComparacao(container, d) {
+  const canvas = document.createElement('canvas');
+  canvas.style.height = '300px';
+  container.appendChild(canvas);
+
+  // Normaliza 2026 para ano completo (estimativa)
+  const fator = 12/4;
+  const est2026 = Math.round(d.valor_total[1] * fator);
+
+  chartInstance = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: ['Contratos artísticos', 'Valor (R$M)', 'Municípios'],
+      datasets: [
+        {
+          label: '2025 (completo)',
+          data: [d.artistico[0], d.valor_total[0], d.municipios[0]],
+          backgroundColor: 'rgba(212,168,67,0.7)',
+          borderColor: 'rgba(212,168,67,0.9)',
+          borderWidth: 1,
+          borderRadius: 3,
+        },
+        {
+          label: '2026 (jan–abr)',
+          data: [d.artistico[1], d.valor_total[1], d.municipios[1]],
+          backgroundColor: 'rgba(61,200,216,0.5)',
+          borderColor: 'rgba(61,200,216,0.8)',
+          borderWidth: 1,
+          borderRadius: 3,
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: {labels:{color:'#9AB0C8', font:{family:'IBM Plex Mono', size:10}}},
+        tooltip: {
+          callbacks: {
+            afterBody: (items) => {
+              if (items[0].dataset.label === '2026 (jan–abr)' && items[0].dataIndex === 1) {
+                return [`Projeção 2026 completo: ~R$ ${est2026}M`];
+              }
+              return [];
+            }
+          }
+        }
+      },
+      scales: {
+        x: { ticks: {color:'#6B8099', font:{family:'IBM Plex Mono', size:10}}, grid:{color:'rgba(30,45,69,0.5)'} },
+        y: { ticks: {color:'#6B8099', font:{family:'IBM Plex Mono', size:10}}, grid:{color:'rgba(30,45,69,0.5)'} }
+      }
+    }
+  });
+
+  // Nota de projeção
+  const nota = document.createElement('p');
+  nota.style.cssText = 'font-family: IBM Plex Mono, monospace; font-size: 11px; color: #6B8099; margin-top: 12px; line-height: 1.6;';
+  nota.textContent = `⚠️ 2026 cobre apenas jan–abr. Projeção para o ano completo: ~R$ ${est2026}M (se ritmo se mantiver). O São João (mai–jun) ainda não entrou.`;
+  container.appendChild(nota);
+}
+
+// ── CHAT ────────────────────────────────────────────────────────────────────
+const CONTEXTO_DATASET = `
+Você é um assistente especializado nos dados públicos de contratações artísticas das prefeituras da Bahia.
+
+DATASET: Contratos de inexigibilidade (modalidade que permite contratar sem licitação) do PNCP (Portal Nacional de Contratações Públicas). Foco em shows, bandas, artistas, apresentações artísticas.
+
+DADOS 2025 (janeiro a dezembro):
+- 21.797 contratos de inexigibilidade no total
+- 5.937 contratos artísticos identificados
+- R$ 629 milhões em shows/artistas
+- 273 municípios da Bahia envolvidos
+
+TOP MUNICÍPIOS 2025 (gasto artístico):
+1. Paulo Afonso: R$ 14,8M (68 contratos)
+2. Feira de Santana: R$ 14,6M (191 contratos)
+3. Porto Seguro: R$ 12,1M (270 contratos)
+4. Conceição do Jacuípe: R$ 12,1M (57 contratos)
+5. Itaparica: R$ 10,9M (49 contratos)
+6. Irecê: R$ 10,8M (45 contratos)
+7. Jequié: R$ 10,5M (58 contratos)
+8. Mata de São João: R$ 9,8M (190 contratos)
+9. Cruz das Almas: R$ 9,7M (32 contratos)
+10. Quijingue: R$ 9,5M (56 contratos)
+11. Candeias: R$ 8,4M
+12. Barreiras: R$ 8,3M
+13. Santo Antônio de Jesus: R$ 8,2M
+14. Santo Amaro: R$ 7,7M
+15. Entre Rios: R$ 7,5M
+
+DADOS 2026 (janeiro a abril apenas):
+- 6.509 contratos de inexigibilidade
+- 2.413 contratos artísticos
+- R$ 160 milhões em shows (4 meses)
+- 157 municípios
+
+TOP MUNICÍPIOS 2026 (jan-abr):
+1. Ilhéus: R$ 6,2M (31 contratos)
+2. Porto Seguro: R$ 6,1M (94 contratos)
+3. Paramirim: R$ 5,9M (92 contratos)
+4. Correntina: R$ 5,9M (20 contratos)
+5. Santo Amaro: R$ 5,7M (38 contratos)
+6. João Dourado: R$ 5,6M (35 contratos)
+7. Itaparica: R$ 5,2M (32 contratos)
+
+ARTISTAS EM MAIS MUNICÍPIOS (2025):
+- Toque Dez: 45 municípios, R$ 13,2M total
+- Tayrone: 33 municípios, R$ 9,9M
+- Filhos de Jorge: 23 municípios (concentrados no Recôncavo)
+- Natanzinho Lima: 22 municípios, R$ 13,8M
+- Netto Brito: 19 municípios
+- Calcinha Preta: 18 municípios, R$ 8,1M
+- Xanddy Harmonia: 18 municípios, R$ 9,4M
+- Devinho: 15 municípios
+- Pablo: 12 municípios, R$ 6,2M
+
+MAIORES CACHÊS INDIVIDUAIS:
+1. Simone Mendes - Correntina: R$ 904.000 (Carnaval 2026)
+2. Ana Castela - Irecê: R$ 900.000 (São João 2025)
+3. Ana Castela - Vitória da Conquista: R$ 900.000 (São João 2025)
+4. Pablo - Porto Seguro: R$ 750.000 (Carnaval 2025)
+5. Natanzinho Lima - Vera Cruz: R$ 750.000 (São João 2025)
+6. Xanddy Harmonia - Correntina: R$ 700.000 (Carnaval 2026)
+7. Pablo - Queimadas: R$ 704.000 (Lavagem 2025)
+8. Calcinha Preta - Iraquara: R$ 646.000 (São João 2025)
+9. João Gomes - Vitória da Conquista: R$ 650.000
+
+METODOLOGIA:
+- Fonte: API pública do PNCP (pncp.gov.br)
+- Modalidade: Inexigibilidade (código 9) — forma legal de contratar artistas sem licitação
+- Classificação automática por palavras-chave no campo objetoCompra
+- Flags de qualidade: outliers de valor >R$50M excluídos, contratos estaduais/federais marcados
+- Todos os contratos têm número de controle verificável no PNCP
+
+CONTEXTO IMPORTANTE:
+- O São João é o principal evento contratado (junho/julho)
+- Carnaval em fevereiro
+- Contratos começam a ser publicados meses antes dos eventos
+- Municípios pequenos do interior frequentemente contratam artistas renomados diretamente
+- Salvador aparece com gastos menores porque contrata via produtoras (valores diluídos em contratos de "produção de evento")
+
+Responda em português, de forma direta, com números precisos do dataset quando relevante. Máximo 300 palavras. Destaque números importantes. Seja honesto sobre limitações dos dados (2026 só tem 4 meses, por exemplo).
+`;
+
+let chatHistory = [];
+
+async function enviarChat() {
+  const input = document.getElementById('chatInput');
+  const q = input.value.trim();
+  if (!q) return;
+
+  input.value = '';
+  document.getElementById('sendBtn').disabled = true;
+
+  adicionarMensagem('user', q);
+  const loadId = adicionarLoading();
+
+  try {
+    const messages = [
+      ...chatHistory.slice(-6),
+      { role: 'user', content: q }
+    ];
+
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: CONTEXTO_DATASET,
+        messages
+      })
+    });
+
+    const data = await r.json();
+    const resposta = data.content?.[0]?.text || 'Não consegui processar sua pergunta.';
+
+    removerLoading(loadId);
+    adicionarMensagem('ai', resposta);
+
+    chatHistory.push({ role: 'user', content: q });
+    chatHistory.push({ role: 'assistant', content: resposta });
+
+  } catch(e) {
+    removerLoading(loadId);
+    adicionarMensagem('ai', `Erro de conexão: ${e.message}. Tente novamente.`);
+  }
+
+  document.getElementById('sendBtn').disabled = false;
+}
+
+function adicionarMensagem(tipo, texto) {
+  const chat = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+
+  if (tipo === 'user') {
+    div.className = 'msg-user';
+    div.textContent = texto;
+  } else {
+    div.className = 'msg-ai';
+    div.innerHTML = `<span class="ai-tag">Análise dos dados</span>${formatarTexto(texto)}`;
+  }
+
+  chat.appendChild(div);
+  div.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  return div;
+}
+
+function adicionarLoading() {
+  const id = 'load-' + Date.now();
+  const chat = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = 'msg-loading';
+  div.id = id;
+  div.innerHTML = `<div class="dots"><span></span><span></span><span></span></div> Consultando os dados...`;
+  chat.appendChild(div);
+  div.scrollIntoView({ behavior: 'smooth' });
+  return id;
+}
+
+function removerLoading(id) {
+  document.getElementById(id)?.remove();
+}
+
+function formatarTexto(t) {
+  return t
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br>')
+    .replace(/^(.)/m, '<p>$1') + '</p>';
+}
+
+function preencherChat(texto) {
+  document.getElementById('chatInput').value = texto;
+  document.getElementById('chatInput').focus();
+}
+
+// Configura Chart.js defaults
+Chart.defaults.color = '#6B8099';
+Chart.defaults.font.family = 'IBM Plex Mono';
+</script>
+</body>
+</html>
