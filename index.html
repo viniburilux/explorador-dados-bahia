@@ -603,6 +603,22 @@ footer a { color: var(--gold); text-decoration: none; }
         <span class="q-icon">⚖️</span>
         <span>Como 2025 se compara com 2026?</span>
       </button>
+      <button class="q-btn" onclick="mostrar('numShows')">
+        <span class="q-icon">🎪</span>
+        <span>Quais cidades fazem mais shows?</span>
+      </button>
+      <button class="q-btn" onclick="mostrar('mediaCache')">
+        <span class="q-icon">💸</span>
+        <span>Onde os cachês são mais caros em média?</span>
+      </button>
+      <button class="q-btn" onclick="mostrar('perCapita')">
+        <span class="q-icon">👤</span>
+        <span>Gasto por habitante — cidades pequenas que mais gastam</span>
+      </button>
+      <button class="q-btn" onclick="mostrar('crescimento')">
+        <span class="q-icon">🚀</span>
+        <span>Quais cidades mais aumentaram os gastos de 2025 para 2026?</span>
+      </button>
     </div>
 
     <div id="viz-panel">
@@ -774,7 +790,78 @@ const DATA = {
     artistico: [5937, 2413],
     valor_total: [629, 160],
     municipios: [273, 157],
-  }
+  },
+  // NOVOS DATASETS
+  rankingShows: [
+    {nome:"Porto Seguro",     total:18703856, n:388},
+    {nome:"Itaparica",        total:16098333, n:81},
+    {nome:"Feira de Santana", total:15687960, n:234},
+    {nome:"Mata de São João", total:15094149, n:216},
+    {nome:"Paulo Afonso",     total:14929000, n:70},
+    {nome:"Salvador",         total:13964104, n:98},
+    {nome:"Santo Amaro",      total:13487352, n:115},
+    {nome:"Irecê",            total:13257000, n:49},
+    {nome:"Barreiras",        total:12131100, n:57},
+    {nome:"Conceição do Jacuípe", total:12112000, n:56},
+    {nome:"Jequié",           total:10802523, n:61},
+    {nome:"Quijingue",        total:10656900, n:64},
+    {nome:"Candeias",         total:10443000, n:73},
+    {nome:"Queimadas",        total:9849000,  n:63},
+    {nome:"Cruz das Almas",   total:9790000,  n:33},
+  ],
+  numShows: [
+    {nome:"Porto Seguro",     n:388, total:18703856},
+    {nome:"Feira de Santana", n:234, total:15687960},
+    {nome:"Cachoeira",        n:216, total:9565148},
+    {nome:"Mata de São João", n:216, total:15094149},
+    {nome:"Caetité",          n:130, total:2922600},
+    {nome:"Amargosa",         n:122, total:7066740},
+    {nome:"Paramirim",        n:122, total:5195800},
+    {nome:"Santo Amaro",      n:115, total:13487352},
+    {nome:"Amélia Rodrigues", n:109, total:4489022},
+    {nome:"Salvador",         n:98,  total:13964104},
+    {nome:"Riachão do Jacuípe",n:96, total:2092440},
+    {nome:"Pojuca",           n:96,  total:8903000},
+    {nome:"Conceição do Coité",n:94, total:4856500},
+    {nome:"Guanambi",         n:92,  total:8854116},
+    {nome:"Esplanada",        n:90,  total:9197500},
+  ],
+  mediaCache: [
+    {nome:"Pedro Alexandre",  media:306769, n:13},
+    {nome:"Cruz das Almas",   media:296667, n:33},
+    {nome:"Luís Eduardo Magalhães", media:283524, n:21},
+    {nome:"Valença",          media:282667, n:15},
+    {nome:"Glória",           media:276786, n:14},
+    {nome:"Correntina",       media:275423, n:26},
+    {nome:"Irecê",            media:270551, n:49},
+    {nome:"Jitaúna",          media:258947, n:19},
+    {nome:"Santo Antônio de Jesus", media:254905, n:34},
+    {nome:"Iraquara",         media:229364, n:22},
+  ],
+  perCapita: [
+    {nome:"Itaparica",        perCapita:613, pop:26271,  total:16098333},
+    {nome:"Quijingue",        perCapita:543, pop:19617,  total:10656900},
+    {nome:"Conceição do Jacuípe", perCapita:405, pop:29898, total:12112000},
+    {nome:"Mata de São João", perCapita:277, pop:54498,  total:15094149},
+    {nome:"Cachoeira",        perCapita:270, pop:35409,  total:9565148},
+    {nome:"Santo Amaro",      perCapita:241, pop:56048,  total:13487352},
+    {nome:"Queimadas",        perCapita:206, pop:47699,  total:9849000},
+    {nome:"Irecê",            perCapita:193, pop:68833,  total:13257000},
+    {nome:"Cruz das Almas",   perCapita:159, pop:61476,  total:9790000},
+    {nome:"Paulo Afonso",     perCapita:122, pop:121929, total:14929000},
+  ],
+  crescimento: [
+    {nome:"São Francisco do Conde", v25:3200,    v26:728200,  pct:22656},
+    {nome:"Itarantim",           v25:180000,   v26:1590000, pct:783},
+    {nome:"Correntina",          v25:1217000,  v26:5944000, pct:388},
+    {nome:"Ibotirama",           v25:601500,   v26:2150000, pct:257},
+    {nome:"Maracás",             v25:232000,   v26:767000,  pct:231},
+    {nome:"Quixabeira",          v25:488400,   v26:1070000, pct:119},
+    {nome:"Ilhéus",              v25:3556500,  v26:6230000, pct:75},
+    {nome:"Jiquiriçá",           v25:633000,   v26:976500,  pct:54},
+    {nome:"Teixeira de Freitas", v25:448500,   v26:632292,  pct:41},
+    {nome:"Simões Filho",        v25:1300000,  v26:1805000, pct:39},
+  ],
 };
 
 // ── VISUALIZAÇÕES ────────────────────────────────────────────────────────────
@@ -817,6 +904,30 @@ const vizsConfig = {
     tipo: 'comparacao',
     dados: () => DATA.comparacao,
   },
+  numShows: {
+    title: "Cidades que mais fizeram shows (nº de contratos)",
+    insight: `<strong>Porto Seguro</strong> é campeã absoluta com 388 contratos artísticos — praticamente um show a cada dia do ano. <strong>Feira de Santana</strong> e <strong>Cachoeira</strong> aparecem em seguida com 234 e 216 contratos respectivamente. Alguns municípios pequenos, como <strong>Paramirim</strong>, aparecem com 122 shows — mais de 2 por semana numa cidade de 21 mil habitantes.`,
+    tipo: 'numshows',
+    dados: () => DATA.numShows,
+  },
+  mediaCache: {
+    title: "Onde os cachês são mais caros em média?",
+    insight: `<strong>Pedro Alexandre</strong> lidera com cachê médio de R$ 307 mil — uma cidade de 13 mil habitantes que contratou 13 artistas caros. <strong>Cruz das Almas</strong> e <strong>Luís Eduardo Magalhães</strong> também aparecem no topo. Isso revela cidades que preferem poucos shows com artistas de grande nome a muitos shows menores.`,
+    tipo: 'mediacache',
+    dados: () => DATA.mediaCache,
+  },
+  perCapita: {
+    title: "Gasto por habitante — cidades pequenas no topo",
+    insight: `<strong>Itaparica</strong> gasta R$ 613 por habitante em shows — mais do que qualquer outra cidade. <strong>Quijingue</strong> chega a R$ 543 por pessoa. Para comparação, <strong>Salvador</strong> gasta apenas R$ 5,8 por habitante. Este dado é o mais revelador: cidades pequenas comprometem muito mais do orçamento relativo em entretenimento.`,
+    tipo: 'percapita',
+    dados: () => DATA.perCapita,
+  },
+  crescimento: {
+    title: "Cidades que mais aumentaram os gastos de 2025 para 2026",
+    insight: `<strong>Correntina</strong> cresceu 388% — de R$ 1,2M em 2025 para R$ 5,9M em 2026 (só janeiro-abril). O Carnaval de Correntina com Simone Mendes, Zé Neto e Cristiano explica boa parte disso. <strong>Ilhéus</strong> cresceu 75% e já lidera o ranking de 2026. Esses números mostram cidades que escalaram fortemente seus investimentos em shows.`,
+    tipo: 'crescimento',
+    dados: () => DATA.crescimento,
+  },
 };
 
 function mostrar(tipo) {
@@ -840,6 +951,10 @@ function mostrar(tipo) {
   else if (cfg.tipo === 'artistas_chart') renderArtistas(container, cfg.dados());
   else if (cfg.tipo === 'line') renderLine(container, cfg.dados());
   else if (cfg.tipo === 'comparacao') renderComparacao(container, cfg.dados());
+  else if (cfg.tipo === 'numshows') renderNumShows(container, cfg.dados());
+  else if (cfg.tipo === 'mediacache') renderMediaCache(container, cfg.dados());
+  else if (cfg.tipo === 'percapita') renderPerCapita(container, cfg.dados());
+  else if (cfg.tipo === 'crescimento') renderCrescimento(container, cfg.dados());
 
   panel.scrollIntoView({behavior:'smooth', block:'nearest'});
 }
@@ -1185,6 +1300,139 @@ function formatarTexto(t) {
 function preencherChat(texto) {
   document.getElementById('chatInput').value = texto;
   document.getElementById('chatInput').focus();
+}
+
+function renderNumShows(container, dados) {
+  const max = dados[0].n;
+  const html = dados.slice(0,10).map((d,i) => `
+    <div class="ranking-item">
+      <div class="rank-n ${i<3?'top3':''}">${i+1}</div>
+      <div>
+        <div class="rank-name">${d.nome}</div>
+        <div class="rank-sub">R$ ${(d.total/1e6).toFixed(1)}M em cachês</div>
+        <div class="bar-wrap"><div class="bar-fill" style="width:${(d.n/max*100).toFixed(0)}%"></div></div>
+      </div>
+      <div class="rank-val">${d.n} shows</div>
+    </div>
+  `).join('');
+  container.innerHTML = `<div class="ranking-list">${html}</div>`;
+}
+
+function renderMediaCache(container, dados) {
+  const max = dados[0].media;
+  const html = dados.map((d,i) => `
+    <div class="ranking-item">
+      <div class="rank-n ${i<3?'top3':''}">${i+1}</div>
+      <div>
+        <div class="rank-name">${d.nome}</div>
+        <div class="rank-sub">${d.n} contratos</div>
+        <div class="bar-wrap"><div class="bar-fill" style="width:${(d.media/max*100).toFixed(0)}%"></div></div>
+      </div>
+      <div class="rank-val">R$ ${(d.media/1e3).toFixed(0)}k</div>
+    </div>
+  `).join('');
+  container.innerHTML = `<div class="ranking-list">${html}</div>`;
+}
+
+function renderPerCapita(container, dados) {
+  const canvas = document.createElement('canvas');
+  canvas.style.height = '320px';
+  container.appendChild(canvas);
+
+  chartInstance = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: dados.map(d => d.nome),
+      datasets: [{
+        label: 'R$ por habitante',
+        data: dados.map(d => d.perCapita),
+        backgroundColor: dados.map((d,i) => i < 3 ? 'rgba(212,168,67,0.85)' : 'rgba(212,168,67,0.35)'),
+        borderColor: 'rgba(212,168,67,0.6)',
+        borderWidth: 1,
+        borderRadius: 3,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: {display:false},
+        tooltip: {
+          callbacks: {
+            afterLabel: (ctx) => {
+              const d = dados[ctx.dataIndex];
+              return [`Pop.: ${d.pop.toLocaleString('pt-BR')} hab.`, `Total: R$ ${(d.total/1e6).toFixed(1)}M`];
+            }
+          }
+        }
+      },
+      scales: {
+        x: { ticks: {color:'#6B8099', font:{family:'IBM Plex Mono', size:10}}, grid:{color:'rgba(30,45,69,0.5)'}, title:{display:true, text:'R$ por habitante', color:'#6B8099', font:{family:'IBM Plex Mono', size:9}} },
+        y: { ticks: {color:'#9AB0C8', font:{family:'IBM Plex Mono', size:10}}, grid:{display:false} }
+      }
+    }
+  });
+
+  const nota = document.createElement('p');
+  nota.style.cssText = 'font-family: IBM Plex Mono, monospace; font-size: 11px; color: #6B8099; margin-top: 12px;';
+  nota.textContent = '* Salvador gasta R$ 5,8 por habitante. Itaparica gasta R$ 613 — 106x mais proporcionalmente.';
+  container.appendChild(nota);
+}
+
+function renderCrescimento(container, dados) {
+  // Remove São Francisco do Conde (outlier de 22.656% distorce o gráfico)
+  const semOutlier = dados.filter(d => d.pct < 500);
+  const canvas = document.createElement('canvas');
+  canvas.style.height = '300px';
+  container.appendChild(canvas);
+
+  chartInstance = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: semOutlier.map(d => d.nome),
+      datasets: [
+        {
+          label: '2025',
+          data: semOutlier.map(d => d.v25/1e6),
+          backgroundColor: 'rgba(212,168,67,0.5)',
+          borderColor: 'rgba(212,168,67,0.8)',
+          borderWidth: 1,
+          borderRadius: 3,
+        },
+        {
+          label: '2026 (jan–abr)',
+          data: semOutlier.map(d => d.v26/1e6),
+          backgroundColor: 'rgba(61,200,216,0.6)',
+          borderColor: 'rgba(61,200,216,0.9)',
+          borderWidth: 1,
+          borderRadius: 3,
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: {labels:{color:'#9AB0C8', font:{family:'IBM Plex Mono', size:10}}},
+        tooltip: {
+          callbacks: {
+            afterBody: (items) => {
+              const d = semOutlier[items[0].dataIndex];
+              return [`Crescimento: +${d.pct}%`];
+            }
+          }
+        }
+      },
+      scales: {
+        x: { ticks: {color:'#6B8099', font:{family:'IBM Plex Mono', size:9}, maxRotation:30}, grid:{color:'rgba(30,45,69,0.5)'} },
+        y: { ticks: {color:'#6B8099', font:{family:'IBM Plex Mono', size:10}}, grid:{color:'rgba(30,45,69,0.5)'}, title:{display:true, text:'R$ Milhões', color:'#6B8099', font:{family:'IBM Plex Mono', size:9}} }
+      }
+    }
+  });
+
+  const nota = document.createElement('p');
+  nota.style.cssText = 'font-family: IBM Plex Mono, monospace; font-size: 11px; color: #6B8099; margin-top: 12px;';
+  nota.textContent = '* São Francisco do Conde cresceu 22.656% (de R$ 3.200 para R$ 728k) — excluído da escala para não distorcer o gráfico.';
+  container.appendChild(nota);
 }
 
 // Configura Chart.js defaults
