@@ -521,11 +521,110 @@ footer {
 }
 footer a { color: var(--gold); text-decoration: none; }
 
+/* ── SHARE BAR ── */
+.share-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 24px;
+  border-top: 1px solid var(--border);
+  background: rgba(14,20,32,0.5);
+}
+.share-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+.share-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 5px 12px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--muted2);
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 1px;
+}
+.share-btn:hover { border-color: var(--gold); color: var(--gold); }
+.share-btn.copied { border-color: var(--cyan); color: var(--cyan); }
+
+/* ── HISTÓRIAS ── */
+.historias-section { padding: 48px 0; border-top: 1px solid var(--border); }
+.historias-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+.historia-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 22px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.historia-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 3px; height: 100%;
+  background: var(--gold);
+  opacity: 0.6;
+}
+.historia-card:hover {
+  background: var(--surface2);
+  border-color: var(--gold);
+  transform: translateY(-2px);
+}
+.historia-number {
+  font-family: 'Playfair Display', serif;
+  font-size: 40px;
+  font-weight: 900;
+  color: var(--gold2);
+  line-height: 1;
+  margin-bottom: 8px;
+  opacity: 0.9;
+}
+.historia-desc {
+  font-size: 14px;
+  color: var(--muted2);
+  line-height: 1.5;
+}
+.historia-desc strong { color: var(--text); }
+.historia-link {
+  margin-top: 12px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--gold);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* ── ATUALIZAÇÃO ── */
+.update-badge {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+}
+
 /* Responsive */
 @media(max-width: 640px) {
   .hero h1 { font-size: 32px; }
   .questions-grid { grid-template-columns: 1fr; }
   .masthead-source { display: none; }
+  .historias-grid { grid-template-columns: 1fr; }
 }
 </style>
 </head>
@@ -535,7 +634,10 @@ footer a { color: var(--gold); text-decoration: none; }
   <div class="container">
     <div class="masthead-inner">
       <div class="masthead-brand">LuxVerso Research</div>
-      <div class="masthead-source">Fonte: PNCP · Dados abertos do governo federal</div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="update-badge">Atualizado: Abr/2026</span>
+        <div class="masthead-source">Fonte: PNCP · Dados abertos do governo federal</div>
+      </div>
     </div>
   </div>
 </div>
@@ -629,6 +731,54 @@ footer a { color: var(--gold); text-decoration: none; }
       <div class="viz-body">
         <div class="viz-insight" id="viz-insight"></div>
         <div id="viz-content"></div>
+      </div>
+      <div class="share-bar">
+        <span class="share-label">Compartilhar</span>
+        <button class="share-btn" onclick="compartilharLink()">🔗 Copiar link</button>
+        <button class="share-btn" onclick="compartilharTwitter()">𝕏 Twitter</button>
+        <button class="share-btn" onclick="compartilharLinkedIn()">in LinkedIn</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HISTÓRIAS -->
+<div class="historias-section">
+  <div class="container">
+    <div class="section-header">
+      <h2>Histórias que os dados revelam</h2>
+      <div class="divider"></div>
+    </div>
+    <div class="historias-grid">
+      <div class="historia-card" onclick="mostrarHistoria('perCapita')">
+        <div class="historia-number">R$ 613</div>
+        <div class="historia-desc"><strong>por habitante</strong> em shows — é quanto Itaparica gasta. Salvador gasta R$ 5,8. A cidade do interior compromete 106x mais do orçamento relativo.</div>
+        <div class="historia-link">Ver análise →</div>
+      </div>
+      <div class="historia-card" onclick="mostrarHistoria('numShows')">
+        <div class="historia-number">388</div>
+        <div class="historia-desc"><strong>shows contratados</strong> por Porto Seguro em 2025. É praticamente um show por dia, pagos com dinheiro público municipal.</div>
+        <div class="historia-link">Ver análise →</div>
+      </div>
+      <div class="historia-card" onclick="mostrarHistoria('artistas')">
+        <div class="historia-number">45</div>
+        <div class="historia-desc"><strong>municípios diferentes</strong> contrataram o Toque Dez em 2025. Uma em cada seis cidades da Bahia pagou pelo mesmo artista.</div>
+        <div class="historia-link">Ver análise →</div>
+      </div>
+      <div class="historia-card" onclick="mostrarHistoria('caches')">
+        <div class="historia-number">R$ 904k</div>
+        <div class="historia-desc"><strong>maior cachê identificado</strong> — pago pela prefeitura de Correntina para Simone Mendes no Carnaval 2026. Correntina tem 35 mil habitantes.</div>
+        <div class="historia-link">Ver análise →</div>
+      </div>
+      <div class="historia-card" onclick="mostrarHistoria('crescimento')">
+        <div class="historia-number">+388%</div>
+        <div class="historia-desc"><strong>crescimento de Correntina</strong> de 2025 para 2026 (jan-abr). De R$ 1,2M para R$ 5,9M — impulsionado pelo Carnaval com Simone Mendes e Zé Neto.</div>
+        <div class="historia-link">Ver análise →</div>
+      </div>
+      <div class="historia-card" onclick="mostrarHistoria('evolucao')">
+        <div class="historia-number">Jun/Jul</div>
+        <div class="historia-desc"><strong>pico do gasto artístico</strong> — junho e julho concentram o maior volume de shows em 2025. O São João movimenta o país inteiro às custas do contribuinte.</div>
+        <div class="historia-link">Ver análise →</div>
       </div>
     </div>
   </div>
@@ -932,9 +1082,13 @@ const vizsConfig = {
 
 function mostrar(tipo) {
   document.querySelectorAll('.q-btn').forEach(b => b.classList.remove('active'));
-  event.currentTarget.classList.add('active');
+  // Mark active button
+  document.querySelectorAll('.q-btn').forEach(b => {
+    if (b.getAttribute('onclick') === `mostrar('${tipo}')`) b.classList.add('active');
+  });
 
   const cfg = vizsConfig[tipo];
+  if (!cfg) return;
   document.getElementById('viz-title').textContent = cfg.title;
   document.getElementById('viz-insight').innerHTML = cfg.insight;
 
@@ -956,14 +1110,60 @@ function mostrar(tipo) {
   else if (cfg.tipo === 'percapita') renderPerCapita(container, cfg.dados());
   else if (cfg.tipo === 'crescimento') renderCrescimento(container, cfg.dados());
 
+  // Deep link
+  history.replaceState(null, '', '#' + tipo);
+  window.currentViz = tipo;
+
   panel.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function mostrarHistoria(tipo) {
+  // Scroll até a seção de explorador e abre
+  document.querySelector('.explorer').scrollIntoView({behavior:'smooth'});
+  setTimeout(() => mostrar(tipo), 400);
 }
 
 function fecharViz() {
   document.getElementById('viz-panel').style.display = 'none';
   document.querySelectorAll('.q-btn').forEach(b => b.classList.remove('active'));
   if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+  history.replaceState(null, '', window.location.pathname);
+  window.currentViz = null;
 }
+
+// ── COMPARTILHAR ─────────────────────────────────────────────────────────────
+function compartilharLink() {
+  const url = window.location.href.split('#')[0] + (window.currentViz ? '#' + window.currentViz : '');
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.querySelector('.share-btn');
+    const orig = btn.textContent;
+    btn.textContent = '✅ Copiado!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function compartilharTwitter() {
+  const cfg = window.currentViz ? vizsConfig[window.currentViz] : null;
+  const texto = cfg
+    ? `${cfg.title} — dados públicos do PNCP. Prefeituras da Bahia gastaram R$ 629M em shows em 2025.`
+    : 'Prefeituras da Bahia gastaram R$ 629M em shows em 2025. Dados públicos do PNCP.';
+  const url = window.location.href;
+  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(texto)}&url=${encodeURIComponent(url)}&via=viniburilux`, '_blank');
+}
+
+function compartilharLinkedIn() {
+  const url = window.location.href;
+  window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`, '_blank');
+}
+
+// ── DEEP LINK NA CARGA ───────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  const hash = window.location.hash.replace('#', '');
+  if (hash && vizsConfig[hash]) {
+    setTimeout(() => mostrar(hash), 300);
+  }
+});
 
 function renderRanking(container, dados) {
   const max = dados[0].val;
